@@ -12,30 +12,29 @@
 │   ├── 结构型模式
 │   ├── 行为模式
 │   └── 软件设计原则.md
-├── src
-│   ├── Behavioral
-│   │   ├── Behavioral-Command.cpp
-│   │   ├── Behavioral-Mediator.cpp
-│   │   ├── Behavioral-Observer.cpp
-│   │   ├── Behavioral-State.cpp
-│   │   └── Behavioral-Strategy.cpp
-│   ├── Creational
-│   │   ├── Creational-AbstractFactory.cpp
-│   │   ├── Creational-Builder.cpp
-│   │   ├── Creational-FactoryMethod.cpp
-│   │   ├── Creational-Prototype.cpp
-│   │   └── Creational-Singleton.cpp
-│   ├── Structural
-│   │   ├── Structural-Adapter.cpp
-│   │   ├── Structural-Bridge.cpp
-│   │   ├── Structural-Decorator.cpp
-│   │   ├── Structural-Facade.cpp
-│   │   ├── Structural-Flyweight.cpp
-│   │   └── Structural-Proxy.cpp
-│   └── template.cpp
-└── temp.md
+└── src
+    ├── Behavioral
+    │   ├── Behavioral-Command.cpp
+    │   ├── Behavioral-Mediator.cpp
+    │   ├── Behavioral-Observer.cpp
+    │   ├── Behavioral-State.cpp
+    │   └── Behavioral-Strategy.cpp
+    ├── Creational
+    │   ├── Creational-AbstractFactory.cpp
+    │   ├── Creational-Builder.cpp
+    │   ├── Creational-FactoryMethod.cpp
+    │   ├── Creational-Prototype.cpp
+    │   └── Creational-Singleton.cpp
+    ├── Structural
+    │   ├── Structural-Adapter.cpp
+    │   ├── Structural-Bridge.cpp
+    │   ├── Structural-Decorator.cpp
+    │   ├── Structural-Facade.cpp
+    │   ├── Structural-Flyweight.cpp
+    │   └── Structural-Proxy.cpp
+    └── template.cpp
 
-10 directories, 23 files
+10 directories, 22 files
 ```
 
 
