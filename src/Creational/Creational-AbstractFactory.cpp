@@ -1,161 +1,186 @@
 #include <iostream>
+#include <string>
 using namespace std;
 
 /*
-有两种产品：ProductA 和 ProductB，它们没有共同的接口，是两种完全不同的产品
-每种产品有两种实现：ProductA1 和 ProductA2，ProductB1 和 ProductB2（就像两个品牌）
-有两种工厂：Factory1 和 Factory2（就像两个品牌的工厂）
-工厂实现相同的接口 Factory，Factory可以生产两种产品A和B
-工厂1生产产品A1和B1，工厂2生产产品A2和B2
+举例：还是开发GUI库，支持Win和Mac两个OS。
+有两种控件：Button和CheckBox。
 */
 
-/* 声明 */
-class ProductA;
-class ProductA1;
-class ProductA2;
-class ProductB;
-class ProductB1;
-class ProductB2;
-class Factory;
-class Factory1;
-class Factory2;
+/* ********************************* */
+// 声明
+/* ********************************* */
 
-/* 定义 */
+class GUIFactory;
+class WinFactory;
+class MacFactory;
 
-// 产品A
-class ProductA
+class Button;
+class Checkbox;
+class WinButton;
+class MacButton;
+class WinCheckbox;
+class MacCheckbox;
+
+/* ********************************* */
+// 定义接口
+/* ********************************* */
+
+class Button
 {
 public:
-    virtual ~ProductA() {}
-    virtual void use() = 0; // 抽象类
+    virtual ~Button() {}
+    virtual void paint() = 0;
 };
 
-class ProductA1 : public ProductA
+class Checkbox
 {
 public:
-    void use();
+    virtual ~Checkbox() {}
+    virtual void paint() = 0;
 };
 
-class ProductA2 : public ProductA
+class GUIFactory
 {
 public:
-    void use();
+    virtual ~GUIFactory() {}
+
+    virtual Button *createButton() = 0;
+    virtual Checkbox *createCheckbox() = 0;
 };
 
-// 产品B
-class ProductB
+/* ********************************* */
+// 定义按钮子类
+/* ********************************* */
+
+class WinButton : public Button
 {
 public:
-    virtual ~ProductB() {}
-    virtual void use() = 0; // 抽象类
+    void paint()
+    {
+        cout << "render Windows Button" << endl;
+    }
 };
 
-class ProductB1 : public ProductB
+class MacButton : public Button
 {
 public:
-    void use();
+    void paint()
+    {
+        cout << "render MacOS Button" << endl;
+    }
 };
 
-class ProductB2 : public ProductB
+/* ********************************* */
+// 定义多选框子类
+/* ********************************* */
+
+class WinCheckbox : public Checkbox
 {
 public:
-    void use();
+    void paint()
+    {
+        cout << "render Windows Checkbox" << endl;
+    }
 };
 
-// 工厂
-class Factory
+class MacCheckbox : public Checkbox
 {
 public:
-    virtual ~Factory() {}
-    virtual ProductA *createProductA() = 0; // 抽象类
-    virtual ProductB *createProductB() = 0; // 抽象类
+    void paint()
+    {
+        cout << "render MacOS Checkbox" << endl;
+    }
 };
 
-class Factory1 : public Factory
+
+/* ********************************* */
+// 定义工厂子类
+/* ********************************* */
+
+class WinFactory : public GUIFactory
 {
 public:
-    ProductA1 *createProductA();
-    ProductB1 *createProductB();
+    Button *createButton()
+    {
+        return new WinButton();
+    }
+    Checkbox *createCheckbox()
+    {
+        return new WinCheckbox();
+    }
 };
 
-class Factory2 : public Factory
+class MacFactory : public GUIFactory
 {
 public:
-    ProductA2 *createProductA();
-    ProductB2 *createProductB();
+    Button *createButton()
+    {
+        return new MacButton();
+    }
+    Checkbox *createCheckbox()
+    {
+        return new MacCheckbox();
+    }
 };
 
-/* 实现 */
-
-// 产品A
-
-void ProductA1::use()
-{
-    cout << "ProductA1::use()" << endl;
-}
-
-void ProductA2::use()
-{
-    cout << "ProductA2::use()" << endl;
-}
-
-// 产品B
-
-void ProductB1::use()
-{
-    cout << "ProductB1::use()" << endl;
-}
-
-void ProductB2::use()
-{
-    cout << "ProductB2::use()" << endl;
-}
-
-// 工厂
-
-ProductA1 *Factory1::createProductA()
-{
-    return new ProductA1();
-}
-
-ProductB1 *Factory1::createProductB()
-{
-    return new ProductB1();
-}
-
-ProductA2 *Factory2::createProductA()
-{
-    return new ProductA2();
-}
-
-ProductB2 *Factory2::createProductB()
-{
-    return new ProductB2();
-}
-
+/* ********************************* */
 // 客户端
+/* ********************************* */
+
+// 客户端只需要知道GUIFactory接口，不需要知道具体的工厂子类
+// 即Application整个类里没有出现Win、Mac等字样
+
+class Application
+{
+private:
+    GUIFactory *factory;
+    Button *button;
+    Checkbox *checkbox;
+
+public:
+    Application(GUIFactory *factory) : factory(factory) {}
+    ~Application()
+    {
+        if(button)
+            delete button;
+        if(checkbox)
+            delete checkbox;
+    }
+
+    void createUI()
+    {
+        button = factory->createButton();
+        checkbox = factory->createCheckbox();
+    }
+
+    void paint()
+    {
+        button->paint();
+        checkbox->paint();
+    }
+};
 
 int main()
 {
-    Factory *factory1 = new Factory1();
-    ProductA *productA1 = factory1->createProductA();
-    ProductB *productB1 = factory1->createProductB();
-    productA1->use();
-    productB1->use();
+    string config = "Win"; // 这里应该是从配置文件读取，config = readConfig();
 
-    Factory *factory2 = new Factory2();
-    ProductA *productA2 = factory2->createProductA();
-    ProductB *productB2 = factory2->createProductB();
-    productA2->use();
-    productB2->use();
+    GUIFactory *factory;
+    if(config == "Win")
+        factory = new WinFactory();
+    else if(config == "Mac")
+        factory = new MacFactory();
+    else
+        return -1;
 
-    delete factory1;
-    delete productA1;
-    delete productB1;
+    // 整个Application运行过程中，不需要知道Win、Mac等具体类型
+    // Application初始化中就已经决定使用哪种系列的产品
 
-    delete factory2;
-    delete productA2;
-    delete productB2;
+    Application *app = new Application(factory);
+    app->createUI();
+    app->paint();
+
+    delete app;
 
     return 0;
 }
