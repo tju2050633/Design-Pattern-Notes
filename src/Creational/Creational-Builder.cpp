@@ -3,54 +3,136 @@
 using namespace std;
 
 /*
-
+举例：创建汽车和汽车手册
 */
 
-/* 声明 */
+/* ********************************* */
+// 声明
+/* ********************************* */
 
-class Product;
+// 产品
+class Car;
+class Manual;
+
+// 建造者
 class Builder;
-class ConcreteBuilder;
+class CarBuilder;
+class ManualBuilder;
+
+// 主管
 class Director;
 
-/* 定义 */
+/* ********************************* */
+// 定义产品
+/* ********************************* */
 
-class Product
+class Car
 {
-private:
-    string partA;
-    string partB;
-    string partC;
-
-public:
-    void setPartA(string partA);
-    void setPartB(string partB);
-    void setPartC(string partC);
-    void use();
 };
+
+class Manual
+{
+};
+
+/* ********************************* */
+// 定义builder接口
+/* ********************************* */
 
 class Builder
 {
 public:
     virtual ~Builder() {}
-    virtual void buildPartA() = 0;
-    virtual void buildPartB() = 0;
-    virtual void buildPartC() = 0;
-    virtual Product *getProduct() = 0;
+
+    virtual void reset() = 0;
+    virtual void setSeats(int number) = 0;
+    virtual void setEngine(string engine) = 0;
+    virtual void setTripComputer() = 0;
+    virtual void setGPS() = 0;
 };
 
-class ConcreteBuilder : public Builder
+/* ********************************* */
+// 定义builder
+/* ********************************* */
+
+class CarBuilder : public Builder
 {
 private:
-    Product *product;
+    Car *car;
 
 public:
-    ConcreteBuilder();
-    void buildPartA();
-    void buildPartB();
-    void buildPartC();
-    Product *getProduct();
+    void reset()
+    {
+        cout << "CarBuilder::reset()" << endl;
+        car = new Car();
+    }
+
+    void setSeats(int number)
+    {
+        cout << "CarBuilder::setSeats() seat number = " << number << endl;
+    }
+
+    void setEngine(string engine)
+    {
+        cout << "CarBuilder::setEngine() engine type = " << engine << endl;
+    }
+
+    void setTripComputer()
+    {
+        cout << "CarBuilder::setTripComputer()" << endl;
+    }
+
+    void setGPS()
+    {
+        cout << "CarBuilder::setGPS()" << endl;
+    }
+
+    Car *getResult()
+    {
+        return car;
+    }
 };
+
+class ManualBuilder : public Builder
+{
+private:
+    Manual *manual;
+
+public:
+    void reset()
+    {
+        cout << "ManualBuilder::reset()" << endl;
+        manual = new Manual();
+    }
+
+    void setSeats(int number)
+    {
+        cout << "ManualBuilder::setSeats() seat number = " << number << endl;
+    }
+
+    void setEngine(string engine)
+    {
+        cout << "ManualBuilder::setEngine() engine type = " << engine << endl;
+    }
+
+    void setTripComputer()
+    {
+        cout << "ManualBuilder::setTripComputer()" << endl;
+    }
+
+    void setGPS()
+    {
+        cout << "ManualBuilder::setGPS()" << endl;
+    }
+
+    Manual *getResult()
+    {
+        return manual;
+    }
+};
+
+/* ********************************* */
+// 定义director
+/* ********************************* */
 
 class Director
 {
@@ -58,89 +140,75 @@ private:
     Builder *builder;
 
 public:
-    Director(Builder *builder);
-    Product *construct();
+    void setBuilder(Builder *builder)
+    {
+        // 这里居然必须有this->，否则会报错
+        this->builder = builder;
+    }
+
+    // 对不同类型的产品，不在builder上区分，而是让director通过参数区分
+    void constructSportsCar()
+    {
+        builder->reset();
+        builder->setSeats(2);
+        builder->setEngine("sport engine");
+        builder->setTripComputer();
+        builder->setGPS();
+    }
+
+    void constructSUV()
+    {
+        builder->reset();
+        builder->setSeats(4);
+        builder->setEngine("SUV engine");
+        builder->setTripComputer();
+        builder->setGPS();
+    }
 };
 
-/* 实现 */
-
-void Product::setPartA(string partA)
-{
-    this->partA = partA;
-}
-
-void Product::setPartB(string partB)
-{
-    this->partB = partB;
-}
-
-void Product::setPartC(string partC)
-{
-    this->partC = partC;
-}
-
-void Product::use()
-{
-    cout << "Product::use()" << endl;
-    cout << "partA: " << partA << endl;
-    cout << "partB: " << partB << endl;
-    cout << "partC: " << partC << endl;
-}
-
-ConcreteBuilder::ConcreteBuilder()
-{
-    product = new Product();
-}
-
-void ConcreteBuilder::buildPartA()
-{
-    cout << "ConcreteBuilder::buildPartA()" << endl;
-    product->setPartA("partA");
-}
-
-void ConcreteBuilder::buildPartB()
-{
-    cout << "ConcreteBuilder::buildPartB()" << endl;
-    product->setPartB("partB");
-}
-
-void ConcreteBuilder::buildPartC()
-{
-    cout << "ConcreteBuilder::buildPartC()" << endl;
-    product->setPartC("partC");
-}
-
-Product *ConcreteBuilder::getProduct()
-{
-    return product;
-}
-
-Director::Director(Builder *builder)
-{
-    this->builder = builder;
-}
-
-Product *Director::construct()
-{
-    builder->buildPartA();
-    builder->buildPartB();
-    builder->buildPartC();
-    return builder->getProduct();
-}
-
+/* ********************************* */
 // 客户端
+/* ********************************* */
 
 int main()
 {
-    Builder *builder = new ConcreteBuilder();
-    Director director(builder);
+    Director *director = new Director();
+    Car *car;
+    Manual *manual;
 
-    Product *product = director.construct();
+    // 创建Car
+    CarBuilder *carBuilder = new CarBuilder();
+    director->setBuilder(carBuilder);
 
-    product->use();
+    // 创建Sports Car
+    cout << "========================Create Sports Car========================" << endl;
+    director->constructSportsCar();
+    car = carBuilder->getResult();
 
-    delete builder;
-    delete product;
+    // 创建SUV Car
+    cout << "========================Create SUV Car========================" << endl;
+    director->constructSUV();
+    car = carBuilder->getResult();
+
+    // 创建Manual
+    ManualBuilder *manualBuilder = new ManualBuilder();
+    director->setBuilder(manualBuilder);
+
+    // 创建Sports Car
+    cout << "========================Create Sports Car Manual========================" << endl;
+    director->constructSportsCar();
+    manual = manualBuilder->getResult();
+
+    // 创建SUV Car
+    cout << "========================Create SUV Car Manual========================" << endl;
+    director->constructSUV();
+    manual = manualBuilder->getResult();
+
+    delete director;
+    delete car;
+    delete manual;
+    delete carBuilder;
+    delete manualBuilder;
 
     return 0;
 }
