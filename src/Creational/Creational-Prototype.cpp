@@ -1,113 +1,111 @@
 #include <iostream>
+#include <string>
+#include <map>
 using namespace std;
 
-/* 声明 */
+// 书上的伪代码实现的是一个Shape类，然后有Circle和Square两个子类
+// 这里按第二张类图实现，即按钮的注册表
+
+/* ********************************* */
+// 声明
+/* ********************************* */
 
 class Prototype;
-class ConcretePrototype;
-class ConcretePrototypeSub;
+class PrototypeRegistry;
+class Button;
 
-/* 定义 */
+/* ********************************* */
+// 定义
+/* ********************************* */
 
 class Prototype
 {
 public:
     virtual ~Prototype() {}
     virtual Prototype *clone() = 0;
-    virtual void use() = 0;
+    virtual string getColor() = 0;
 };
 
-class ConcretePrototype : public Prototype
+class Button : public Prototype
 {
-protected:
-    string name;
+private:
+    int x;
+    int y;
+    string color;
 
 public:
-    ConcretePrototype(string name);
-    ConcretePrototype(const ConcretePrototype &prototype);
-    Prototype *clone();
-    void use();
+    Button(int x, int y, string color) : x(x), y(y), color(color) {}
+    virtual ~Button() {}
+
+    string getColor() { return color; }
+
+    Prototype *clone()
+    {
+        // clone方法里负责复制每个属性
+        Button *button = new Button(x, y, color);
+        return button;
+    }
 };
 
-class ConcretePrototypeSub : public ConcretePrototype
+class PrototypeRegistry
 {
-protected:
-    int age;
+private:
+    static map<string, Prototype *> registry;
 
 public:
-    ConcretePrototypeSub(string name, int age);
-    ConcretePrototypeSub(const ConcretePrototypeSub &prototype);
-    Prototype *clone();
-    void use();
+    static void addPrototype(string id, Prototype *prototype)
+    {
+        registry[id] = prototype;
+    }
+
+    static Prototype *getById(string id)
+    {
+        return registry[id]->clone();
+    }
+
+    static Prototype *getByColor(string color)
+    {
+        for (auto &item : registry)
+        {
+            if (item.second->getColor() == color)
+            {
+                return item.second->clone();
+            }
+        }
+        return nullptr;
+    }
 };
 
-/* 实现 */
+// 静态成员变量需要在类外初始化
+// 否则报链接错误
+map<string, Prototype *> PrototypeRegistry::registry;
 
-ConcretePrototype::ConcretePrototype(string name)
-{
-    this->name = name;
-}
-
-ConcretePrototype::ConcretePrototype(const ConcretePrototype &prototype)
-{
-    // 同类型的对象可以访问对方的私有成员
-    // 因此实现深拷贝
-    this->name = prototype.name;
-}
-
-Prototype *ConcretePrototype::clone()
-{
-    return new ConcretePrototype(*this);
-}
-
-void ConcretePrototype::use()
-{
-    cout << "ConcretePrototype::use()" << endl;
-    cout << "name: " << name << endl;
-}
-
-ConcretePrototypeSub::ConcretePrototypeSub(string name, int age) : ConcretePrototype(name)
-{
-    this->age = age;
-}
-
-// : 后面相当于super(prototype), 深拷贝了父类的私有成员
-ConcretePrototypeSub::ConcretePrototypeSub(const ConcretePrototypeSub &prototype) : ConcretePrototype(prototype)
-{
-    this->age = prototype.age;
-}
-
-Prototype *ConcretePrototypeSub::clone()
-{
-    return new ConcretePrototypeSub(*this);
-}
-
-void ConcretePrototypeSub::use()
-{
-    cout << "ConcretePrototypeSub::use()" << endl;
-    cout << "name: " << name << endl;
-    cout << "age: " << age << endl;
-}
-
+/* ********************************* */
+// 客户端
+/* ********************************* */
 
 int main()
 {
-    Prototype *prototype = new ConcretePrototype("prototype");
-    prototype->use();
+    // 原型
+    Button *button_prototype_red = new Button(0, 0, "red");
+    Button *button_prototype_blue = new Button(0, 0, "blue");
+    Button *button_prototype_yellow = new Button(0, 0, "yellow");
 
-    Prototype *prototypeClone = prototype->clone();
-    prototypeClone->use();
+    // 加入注册表
+    PrototypeRegistry::addPrototype("error", button_prototype_red);
+    PrototypeRegistry::addPrototype("ok", button_prototype_blue);
+    PrototypeRegistry::addPrototype("warning", button_prototype_yellow);
 
-    Prototype *prototypeSub = new ConcretePrototypeSub("prototypeSub", 18);
-    prototypeSub->use();
+    // 克隆
+    // 这里的clone是深拷贝，即复制了每个属性
+    // 需要强转为Button类型
+    Button *error_button = (Button *)PrototypeRegistry::getById("error");
+    Button *ok_button = (Button *)PrototypeRegistry::getById("ok");
+    Button *warning_button = (Button *)PrototypeRegistry::getById("warning");
 
-    Prototype *prototypeSubClone = prototypeSub->clone();
-    prototypeSubClone->use();
-
-    delete prototype;
-    delete prototypeClone;
-    delete prototypeSub;
-    delete prototypeSubClone;
+    cout << error_button->getColor() << endl;
+    cout << ok_button->getColor() << endl;
+    cout << warning_button->getColor() << endl;
 
     return 0;
 }
