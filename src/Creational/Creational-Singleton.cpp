@@ -2,74 +2,67 @@
 #include <string>
 using namespace std;
 
-/* 声明 */
+// 梦回cocos2dx的单例导演
 
-class Singleton;
+/* ********************************* */
+// 声明
+/* ********************************* */
 
-/* 定义 */
+class Director;
 
-class Singleton
+/* ********************************* */
+// 定义
+/* ********************************* */
+
+class Director
 {
 private:
-    static Singleton *instance;
-    string name;
+    static Director *instance;
+    Director() {}
 
-    // 构造函数要私有，不允许外部创建实例
-    Singleton();
-    ~Singleton();
+    // 单例模型可以保存一些全局状态
+    string currentScene;
 
 public:
-    static Singleton *getInstance();
-    void setName(string name);
-    string getName();
+    static Director *getInstance()
+    {
+        if (instance == nullptr)
+        {
+            instance = new Director();
+        }
+        return instance;
+    }
+
+    void setCurrentScene(string scene)
+    {
+        currentScene = scene;
+    }
+
+    string getCurrentScene()
+    {
+        return currentScene;
+    }
 };
 
-/* 实现 */
+// 静态成员变量要在类外初始化
+Director *Director::instance = nullptr;
 
-// 静态成员变量必须在类外初始化
-Singleton *Singleton::instance = NULL;
-
-Singleton::Singleton()
-{
-}
-
-Singleton::~Singleton()
-{
-    if (instance != NULL)
-    {
-        delete instance;
-    }
-}
-
-Singleton *Singleton::getInstance()
-{
-    if (instance == NULL)
-    {
-        instance = new Singleton();
-    }
-    return instance;
-}
-
-void Singleton::setName(string name)
-{
-    this->name = name;
-}
-
-string Singleton::getName()
-{
-    return this->name;
-}
+/* ********************************* */
+// 客户端
+/* ********************************* */
 
 int main()
 {
-    Singleton *singleton1 = Singleton::getInstance();
-    Singleton *singleton2 = Singleton::getInstance();
-    singleton1->setName("Singleton");
-    cout << singleton1->getName() << endl;
-    cout << singleton2->getName() << endl;
+    Director *director1 = Director::getInstance();
+    director1->setCurrentScene("scene1");
 
-    cout << singleton1 << endl;
-    cout << singleton2 << endl;
+    Director *director2 = Director::getInstance();
+    cout << director2->getCurrentScene() << endl;
+    director2->setCurrentScene("scene2");
+    cout << director2->getCurrentScene() << endl;
+
+    cout << "director1 : " << director1 << endl;
+    cout << "director2 : " << director2 << endl;
 
     return 0;
 }
