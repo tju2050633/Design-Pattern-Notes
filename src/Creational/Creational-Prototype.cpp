@@ -10,23 +10,28 @@ using namespace std;
 // 声明
 /* ********************************* */
 
-class Prototype;
-class PrototypeRegistry;
+class Clonable;
+class ButtonRegistry;
 class Button;
+class RectangleButton;
+class RoundButton;
 
 /* ********************************* */
-// 定义
+// 定义可克隆接口
 /* ********************************* */
 
-class Prototype
+class Clonable
 {
 public:
-    virtual ~Prototype() {}
-    virtual Prototype *clone() = 0;
-    virtual string getColor() = 0;
+    virtual ~Clonable() {}
+    virtual Clonable *clone() = 0;
 };
 
-class Button : public Prototype
+/* ********************************* */
+// 定义按钮继承体系
+/* ********************************* */
+
+class Button : public Clonable
 {
 private:
     int x;
@@ -53,23 +58,74 @@ public:
     }
 };
 
-class PrototypeRegistry
+class RectangleButton : public Button
 {
 private:
-    static map<string, Prototype *> registry;
+    int width;
+    int height;
 
 public:
-    static void addPrototype(string id, Prototype *prototype)
+    RectangleButton(int x, int y, string color, int width, int height) : Button(x, y, color)
+    {
+        this->width = width;
+        this->height = height;
+    }
+
+    RectangleButton(const RectangleButton &button) : Button(button)
+    {
+        this->width = button.width;
+        this->height = button.height;
+    }
+
+    RectangleButton *clone()
+    {
+        return new RectangleButton(*this);
+    }
+};
+
+class RoundButton : public Button
+{
+private:
+    int radius;
+
+public:
+    RoundButton(int x, int y, string color, int radius) : Button(x, y, color)
+    {
+        this->radius = radius;
+    }
+
+    RoundButton(const RoundButton &button) : Button(button)
+    {
+        this->radius = button.radius;
+    }
+
+    RoundButton *clone()
+    {
+        return new RoundButton(*this);
+    }
+};
+
+/* ********************************* */
+// 定义按钮注册表
+/* ********************************* */
+
+class ButtonRegistry
+{
+private:
+    static map<string, Button *> registry;
+
+public:
+    static void addPrototype(string id, Button *prototype)
     {
         registry[id] = prototype;
     }
 
-    static Prototype *getById(string id)
+    static Button *getById(string id)
     {
         return registry[id]->clone();
     }
 
-    static Prototype *getByColor(string color)
+    static Button *getByColor(string color)
     {
         for (auto &item : registry)
         {
@@ -84,7 +140,7 @@ public:
 
 // 静态成员变量需要在类外初始化
 // 否则报链接错误
-map<string, Prototype *> PrototypeRegistry::registry;
+map<string, Button *> ButtonRegistry::registry;
 
 /* ********************************* */
 // 客户端
@@ -93,25 +149,29 @@ map<string, Prototype *> PrototypeRegistry::registry;
 int main()
 {
     // 原型
-    Button *button_prototype_red = new Button(0, 0, "red");
-    Button *button_prototype_blue = new Button(0, 0, "blue");
-    Button *button_prototype_yellow = new Button(0, 0, "yellow");
+    RectangleButton *button_prototype_rec_red = new RectangleButton(0, 0, "red", 100, 50);
+    RectangleButton *button_prototype_rec_green = new RectangleButton(0, 0, "green", 100, 50);
+    RoundButton *button_prototype_round_blue = new RoundButton(0, 0, "blue", 50);
+    RoundButton *button_prototype_round_yellow = new RoundButton(0, 0, "yellow", 50);
 
     // 加入注册表
-    PrototypeRegistry::addPrototype("error", button_prototype_red);
-    PrototypeRegistry::addPrototype("ok", button_prototype_blue);
-    PrototypeRegistry::addPrototype("warning", button_prototype_yellow);
+    ButtonRegistry::addPrototype("error", button_prototype_rec_red);
+    ButtonRegistry::addPrototype("ok", button_prototype_rec_green);
+    ButtonRegistry::addPrototype("info", button_prototype_round_blue);
+    ButtonRegistry::addPrototype("warning", button_prototype_round_yellow);
 
     // 克隆
     // 这里的clone是深拷贝，即复制了每个属性
     // 需要强转为Button类型
-    Button *error_button = (Button *)PrototypeRegistry::getById("error");
-    Button *ok_button = (Button *)PrototypeRegistry::getById("ok");
-    Button *warning_button = (Button *)PrototypeRegistry::getById("warning");
+    Button *error_button = ButtonRegistry::getById("error");
+    Button *ok_button = ButtonRegistry::getById("ok");
+    Button *warning_button = ButtonRegistry::getById("warning");
+    Button *info_button = ButtonRegistry::getById("info");
 
     cout << error_button->getColor() << endl;
     cout << ok_button->getColor() << endl;
     cout << warning_button->getColor() << endl;
+    cout << info_button->getColor() << endl;
 
     return 0;
 }
