@@ -35,15 +35,21 @@ private:
 
 public:
     Button(int x, int y, string color) : x(x), y(y), color(color) {}
+    Button(const Button &button)
+    {
+        // 支持克隆的类要定义拷贝构造函数
+        this->x = button.x;
+        this->y = button.y;
+        this->color = button.color;
+    }
     virtual ~Button() {}
 
     string getColor() { return color; }
 
-    Prototype *clone()
+    Button *clone()
     {
         // clone方法里负责复制每个属性
-        Button *button = new Button(x, y, color);
-        return button;
+        return new Button(*this);
     }
 };
 
