@@ -2,89 +2,106 @@
 #include <string>
 using namespace std;
 
-/*
-将抽象部分与实现部分分离，使它们都可以独立地变化。
-*/
+// 实现遥控器-设备例子
 
-/* 声明 */
-class Abstraction;
-class RefinedAbstraction;
-class Implementor;
-class ConcreteImplementorA;
-class ConcreteImplementorB;
+/* ********************************* */
+// 声明
+/* ********************************* */
 
-/* 定义 */
+class Device;
+class Radio;
+class TV;
+class Remote;
 
-class Implementor
-{
-public:
-    virtual ~Implementor() {}
-    virtual void operation() = 0;
-};
+/* ********************************* */
+// 定义设备继承体系
+/* ********************************* */
 
-class ConcreteImplementorA : public Implementor
-{
-public:
-    void operation() override;
-};
-
-class ConcreteImplementorB : public Implementor
-{
-public:
-    void operation() override;
-};
-
-class Abstraction
+class Device
 {
 protected:
-    Implementor *implementor;
+    bool enabled;
+    int volume;
+    int channel;
 
 public:
-    virtual ~Abstraction() {}
-    Abstraction(Implementor *implementor) : implementor(implementor) {}
-    virtual void operation() = 0;
+    Device() : enabled(false), volume(0), channel(0) {}
+
+    bool isEnabled() { return enabled; }
+    void enable() { enabled = true; }
+    void disable() { enabled = false; }
+
+    int getVolume() { return volume; }
+    void setVolume(int volume) { this->volume = volume; }
+
+    int getChannel() { return channel; }
+    void setChannel(int channel) { this->channel = channel; }
 };
 
-class RefinedAbstraction : public Abstraction
+class Radio : public Device
 {
 public:
-    RefinedAbstraction(Implementor *implementor) : Abstraction(implementor) {}
-    void operation() override;
+    Radio() : Device() {}
 };
 
-/* 实现 */
-
-void ConcreteImplementorA::operation()
+class TV : public Device
 {
-    cout << "ConcreteImplementorA::operation()" << endl;
-}
+public:
+    TV() : Device() {}
+};
 
-void ConcreteImplementorB::operation()
+/* ********************************* */
+// 定义遥控器
+/* ********************************* */
+
+class Remote
 {
-    cout << "ConcreteImplementorB::operation()" << endl;
-}
+protected:
+    Device *device;
 
-void RefinedAbstraction::operation()
-{
-    implementor->operation();
-}
+public:
+    Remote(Device *device) : device(device) {}
 
+    void togglePower() { device->isEnabled() ? device->disable() : device->enable(); }
+
+    void volumeDown() { device->setVolume(device->getVolume() - 1); }
+    void volumeUp() { device->setVolume(device->getVolume() + 1); }
+
+    void channelDown() { device->setChannel(device->getChannel() - 1); }
+    void channelUp() { device->setChannel(device->getChannel() + 1); }
+};
+
+/* ********************************* */
 // 客户端
+/* ********************************* */
+
 int main()
 {
-    Implementor *implementorA = new ConcreteImplementorA();
-    Implementor *implementorB = new ConcreteImplementorB();
+    // 不同类型的device通过子类区分，便于拓展
+    // remote也可以有多种类型，这里没有实现
+    // device和remot之间的组合通过remote持有的device指针实现桥接
+    Device *radio = new Radio();
+    Device *tv = new TV();
+    Remote *radioRemote = new Remote(radio);
+    Remote *tvRemote = new Remote(tv);
 
-    Abstraction *abstractionA = new RefinedAbstraction(implementorA);
-    Abstraction *abstractionB = new RefinedAbstraction(implementorB);
+    // 客户端通过remote控制device，不需要知道device的具体类型、接口和实现
+    radioRemote->togglePower();
+    radioRemote->volumeUp();
+    radioRemote->volumeUp();
+    radioRemote->channelUp();
+    radioRemote->channelUp();
 
-    abstractionA->operation();
-    abstractionB->operation();
+    tvRemote->togglePower();
+    tvRemote->volumeUp();
+    tvRemote->volumeUp();
+    tvRemote->channelUp();
+    tvRemote->channelUp();
 
-    delete implementorA;
-    delete implementorB;
-    delete abstractionA;
-    delete abstractionB;
+    delete radio;
+    delete tv;
+    delete radioRemote;
+    delete tvRemote;
 
     return 0;
 }
