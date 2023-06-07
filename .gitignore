@@ -1,9 +1,9 @@
 .DS_Store
 .vscode/
 
-src/Behavioral/
-src/Creational/
-src/Structural/
+src/Behavioral/*
+src/Creational/*
+src/Structural/*
 !src/Behavioral/*.cpp
 !src/Creational/*.cpp
 !src/Structural/*.cpp
