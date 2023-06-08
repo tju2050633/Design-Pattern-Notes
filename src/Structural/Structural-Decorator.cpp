@@ -2,90 +2,147 @@
 #include <string>
 using namespace std;
 
-/* 声明 */
-class Component;
-class ConcreteComponent;
-class Decorator;
-class ConcreteDecoratorA;
-class ConcreteDecoratorB;
+// 实现书上的数据源模型
+// 基础组件从磁盘读写数据，装饰器扩展其行为，允许写入磁盘时对数据加密和压缩、读出磁盘后对数据进行解压和解密
 
-/* 定义 */
+/* ********************************* */
+// 客户端
+/* ********************************* */
+class DataSource;
+class FileDataSource;
+class DataSourceDecorator;
+class EncryptionDecorator;
+class CompressionDecorator;
 
-// 构件类，具有operation方法
-class Component
+/* ********************************* */
+// 定义数据源继承体系
+/* ********************************* */
+
+class DataSource
 {
 public:
-    virtual ~Component() {}
-    virtual void operation() = 0;
+    virtual void writeData(string data) = 0;
+    virtual ~DataSource() {}
+    virtual string readData() = 0;
 };
 
-class ConcreteComponent : public Component
-{
-public:
-    void operation() override;
-};
-
-// 装饰器类，继承自Component，具有Component的operation方法
-// 通过组合的方式，将Component的operation方法包装成新的方法
-class Decorator : public Component
+class FileDataSource : public DataSource
 {
 private:
-    Component *component;
+    string filename;
+    string data;
 
 public:
-    virtual ~Decorator() {}
-    Decorator(Component *component) : component(component) {}
-    void operation() override;
+    FileDataSource(string filename) : filename(filename) {}
+    void writeData(string data)
+    {
+        cout << "Write data to file: " << filename << endl;
+        this->data = data;
+    }
+    string readData()
+    {
+        cout << "Read data from file: " << filename << endl;
+        return data;
+    }
 };
 
-class ConcreteDecoratorA : public Decorator
+/* ********************************* */
+// 定义装饰器继承体系（基础装饰器要继承自数据源接口）
+/* ********************************* */
+
+class DataSourceDecorator : public DataSource
+{
+protected:
+    DataSource *wrappee;
+
+public:
+    DataSourceDecorator(DataSource *wrappee) : wrappee(wrappee) {}
+    virtual ~DataSourceDecorator() {}
+    void writeData(string data)
+    {
+        wrappee->writeData(data);
+    }
+    string readData()
+    {
+        return wrappee->readData();
+    }
+};
+
+class EncryptionDecorator : public DataSourceDecorator
 {
 public:
-    ConcreteDecoratorA(Component *component) : Decorator(component) {}
-    void operation() override;
+    EncryptionDecorator(DataSource *wrappee) : DataSourceDecorator(wrappee) {}
+    void writeData(string data)
+    {
+        cout << "Encrypt data" << endl;
+        DataSourceDecorator::writeData(data);
+    }
+    string readData()
+    {
+        string data = DataSourceDecorator::readData();
+        cout << "Decrypt data" << endl;
+        return data;
+    }
 };
 
-class ConcreteDecoratorB : public Decorator
+class CompressionDecorator : public DataSourceDecorator
 {
 public:
-    ConcreteDecoratorB(Component *component) : Decorator(component) {}
-    void operation() override;
+    CompressionDecorator(DataSource *wrappee) : DataSourceDecorator(wrappee) {}
+    void writeData(string data)
+    {
+        cout << "Compress data" << endl;
+        DataSourceDecorator::writeData(data);
+    }
+    string readData()
+    {
+        string data = DataSourceDecorator::readData();
+        cout << "Decompress data" << endl;
+        return data;
+    }
 };
 
-/* 实现 */
-
-void ConcreteComponent::operation()
-{
-    cout << "ConcreteComponent::operation()" << endl;
-}
-
-void Decorator::operation()
-{
-    component->operation();
-}
-
-void ConcreteDecoratorA::operation()
-{
-    Decorator::operation();                            // 构件的方法
-    cout << "ConcreteDecoratorA::operation()" << endl; // 自身的方法
-}
-
-void ConcreteDecoratorB::operation()
-{
-    Decorator::operation();
-    cout << "ConcreteDecoratorB::operation()" << endl;
-}
+/* ********************************* */
+// 客户端
+/* ********************************* */
 
 int main()
 {
-    Component *component = new ConcreteComponent();
-    Decorator *decoratorA = new ConcreteDecoratorA(component);
-    Decorator *decoratorB = new ConcreteDecoratorB(decoratorA);
-    decoratorB->operation();
+    // 不使用装饰器
+    cout << endl
+         << "Without Decorator:" << endl
+         << endl;
+    DataSource *fileDataSource = new FileDataSource("demo_file");
+    fileDataSource->writeData("data without decorator");
+    fileDataSource->readData();
 
-    delete decoratorB;
-    delete decoratorA;
-    delete component;
+    // 使用装饰器
+    cout << endl
+         << "With Encryption Decorator:" << endl
+         << endl;
+    DataSource *encryptionDecorator = new EncryptionDecorator(fileDataSource);
+    encryptionDecorator->writeData("data with encryption decorator");
+    encryptionDecorator->readData();
+
+    cout << endl
+         << "With Compression Decorator:" << endl
+         << endl;
+    DataSource *compressionDecorator = new CompressionDecorator(fileDataSource);
+    compressionDecorator->writeData("data with compression decorator");
+    compressionDecorator->readData();
+
+    cout << endl
+         << "With Encryption and Compression Decorator:" << endl
+         << endl;
+
+    DataSource *encryptionAndCompressionDecorator = new CompressionDecorator(encryptionDecorator);
+    encryptionAndCompressionDecorator->writeData("data with encryption and compression decorator");
+    encryptionAndCompressionDecorator->readData();
+
+    delete fileDataSource;
+    delete encryptionDecorator;
+    delete compressionDecorator;
+    delete encryptionAndCompressionDecorator;
 
     return 0;
 }
