@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cmath>
 using namespace std;
 
 // 这里对书上的方钉、圆孔案例做一点拓展
@@ -10,10 +11,13 @@ using namespace std;
 // 声明
 /* ********************************* */
 
+// 圆/方 钉/孔
 class RoundPeg;
 class SquarePeg;
 class RoundHole;
 class SquareHole;
+
+// 适配器
 class Round2Square_PegAdapter;
 class Square2Round_PegAdapter;
 class Round2Square_HoleAdapter;
@@ -81,7 +85,7 @@ public:
 // 定义钉子适配器
 /* ********************************* */
 
-// 圆钉适配成方钉，计算圆的外接正方形的边长
+// 圆钉适配成方钉：计算圆的外接正方形的边长
 class Round2Square_PegAdapter : public SquarePeg
 {
 private:
@@ -91,7 +95,7 @@ public:
     Round2Square_PegAdapter(RoundPeg *peg) : SquarePeg(peg->getRadius() * 2), peg(peg) {}
 };
 
-// 方钉适配成圆钉，计算正方形的外接圆的半径
+// 方钉适配成圆钉：计算正方形的外接圆的半径
 class Square2Round_PegAdapter : public RoundPeg
 {
 private:

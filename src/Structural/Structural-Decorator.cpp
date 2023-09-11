@@ -6,7 +6,8 @@ using namespace std;
 // 基础组件从磁盘读写数据，装饰器扩展其行为，允许写入磁盘时对数据加密和压缩、读出磁盘后对数据进行解压和解密
 
 /* ********************************* */
-// 客户端
+// 声明
+// 封装顺序：Compression -> Encryption -> DataSource
 /* ********************************* */
 class DataSource;
 class FileDataSource;
@@ -22,8 +23,8 @@ class DataSource
 {
 public:
     virtual void writeData(string data) = 0;
-    virtual ~DataSource() {}
     virtual string readData() = 0;
+    virtual ~DataSource() {}
 };
 
 class FileDataSource : public DataSource
@@ -50,6 +51,7 @@ public:
 // 定义装饰器继承体系（基础装饰器要继承自数据源接口）
 /* ********************************* */
 
+// 基础装饰器：省去装饰器定义成员变量wrappee、成员函数writeData/readData的重复
 class DataSourceDecorator : public DataSource
 {
 protected:

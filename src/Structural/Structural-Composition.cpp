@@ -56,6 +56,9 @@ private:
 
 public:
     Directory(string name) : name(name) {}
+
+    /* 实现Item接口 */
+
     int getSize()
     {
         int size = 0;
@@ -76,6 +79,8 @@ public:
         }
         return content;
     }
+
+    /* Directory特有函数 */
 
     void deleteAll()
     {

@@ -160,7 +160,7 @@ int main()
     ButtonRegistry::addPrototype("info", button_prototype_round_blue);
     ButtonRegistry::addPrototype("warning", button_prototype_round_yellow);
 
-    // 克隆
+    // 克隆：此处不需要知道类RectangleButton和RoundButton的存在
     // 这里的clone是深拷贝，即复制了每个属性
     // 需要强转为Button类型
     Button *error_button = ButtonRegistry::getById("error");
