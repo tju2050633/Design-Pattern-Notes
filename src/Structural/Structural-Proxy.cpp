@@ -1,57 +1,122 @@
-/*
- * @Author: Jialin Lu
- * @GitHub: https://github.com/tju2050633
- * @Date: 2023-05-27 10:22:49
- * @FilePath: /DesignPattern/src/Structural/Structural-Proxy.cpp
- * @Description:
- *
- * Copyright (c) 2023 by 1640889387@qq.com, All Rights Reserved.
- */
 #include <iostream>
 #include <string>
 using namespace std;
 
-/* 声明 */
-class Subject;
-class RealSubject;
-class Proxy;
+// 实现书上腾讯视频库下载的案例
 
-/* 定义 */
-class Subject {
-   public:
-    virtual void Request() = 0;
+/* ********************************* */
+// 声明
+/* ********************************* */
+
+class ThirdPartyTVLib;
+class ThirdPartyTVClass;
+class CachedTVClass;
+class TVManager;
+
+/* ********************************* */
+// 定义
+/* ********************************* */
+
+// 第三方视频库接口（远程服务接口）
+class ThirdPartyTVLib
+{
+public:
+    virtual void listVideos() = 0;
+    virtual void getVideoInfo(string id) = 0;
+    virtual void downloadVideo(string id) = 0;
 };
 
-class RealSubject : public Subject {
-   public:
-    void Request() override { cout << "RealSubject::Request()" << endl; }
-};
-
-class Proxy : public Subject {
-   private:
-    RealSubject *realSubject;
-    void PreRequest() { cout << "Proxy::PreRequest()" << endl; }
-    void PostRequest() { cout << "Proxy::PostRequest()" << endl; }
-
-   public:
-    Proxy(RealSubject *realSubject) { this->realSubject = realSubject; }
-    void Request() override {
-        PreRequest();
-        realSubject->Request();
-        PostRequest();
+// 第三方视频库实现（服务连接器的具体实现）
+// 客户端直接使用该类会有性能问题（每次都要连接远程服务）
+class ThirdPartyTVClass : public ThirdPartyTVLib
+{
+public:
+    void listVideos() override
+    {
+        cout << "send listVideos request" << endl;
+    }
+    void getVideoInfo(string id) override
+    {
+        cout << "send getVideoInfo request" << endl;
+    }
+    void downloadVideo(string id) override
+    {
+        cout << "send downloadVideo request" << endl;
     }
 };
 
-// 客户端
-int main() {
-    // 这里客户端创建了subject然后指定给proxy
-    // 相比于在proxy的ctor中new一个subject，这样可以更灵活地指定subject对象
-    RealSubject *realSubject = new RealSubject();
-    Proxy *proxy = new Proxy(realSubject);
-    proxy->Request();
+// 本地缓存视频库（代理类）
+class CachedTVClass : public ThirdPartyTVLib
+{
+private:
+    ThirdPartyTVLib *m_service;
+    string m_listVideosCache;
+    string m_videoInfoCache;
+    string m_videoCache;
 
-    delete realSubject;
+public:
+    CachedTVClass(ThirdPartyTVLib *service) : m_service(service) {}
+    void listVideos() override
+    {
+        if (m_listVideosCache.empty())
+        {
+            m_service->listVideos();
+        }
+        else
+        {
+            cout << "return listVideos cache" << endl;
+        }
+    }
+    void getVideoInfo(string id) override
+    {
+        if (m_videoInfoCache.empty())
+        {
+            m_service->getVideoInfo(id);
+        }
+        else
+        {
+            cout << "return getVideoInfo cache" << endl;
+        }
+    }
+    void downloadVideo(string id) override
+    {
+        if (m_videoCache.empty())
+        {
+            m_service->downloadVideo(id);
+        }
+        else
+        {
+            cout << "return downloadVideo cache" << endl;
+        }
+    }
+};
+
+// 本地视频库管理器（客户端）
+class TVManager
+{
+private:
+    ThirdPartyTVLib *m_service;
+
+public:
+    TVManager(ThirdPartyTVLib *service) : m_service(service) {}
+    void renderVideoPage(string id)
+    {
+        m_service->listVideos();
+        m_service->getVideoInfo(id);
+        m_service->downloadVideo(id);
+    }
+};
+
+int main()
+{
+    ThirdPartyTVLib *service = new ThirdPartyTVClass();
+    CachedTVClass *proxy = new CachedTVClass(service);
+    TVManager *manager = new TVManager(proxy);
+    manager->renderVideoPage("1");
+
+    delete service;
     delete proxy;
+    delete manager;
 
     return 0;
 }
