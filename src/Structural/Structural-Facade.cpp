@@ -2,93 +2,126 @@
 #include <string>
 using namespace std;
 
-/*
-子系统有不同接口，用一个外观类包装
-*/
+// 抄一遍书上的视频转换案例
+// 老版本笔记是3个抽象的子系统，分别有3个方法，被外观类逐一调用
 
-/* 声明 */
-class SystemA;
-class SystemB;
-class SystemC;
-class Facade;
+/* ********************************* */
+// 声明
+/* ********************************* */
 
-/* 定义 */
-class SystemA
-{
-public:
-    void OperationA();
-};
+// 框架类
+class VideoFile;
+class OggCompressionCodec;
+class MPEG4CompressionCodec;
+class CodecFactory;
+class BitrateReader;
+class AudioMixer;
 
-class SystemB
-{
-public:
-    void OperationB();
-};
+// 外观类
+class VideoConverter;
 
-class SystemC
-{
-public:
-    void OperationC();
-};
+/* ********************************* */
+// 定义
+/* ********************************* */
 
-class Facade
-{
+class VideoFile {
 private:
-    SystemA *sysA;
-    SystemB *sysB;
-    SystemC *sysC;
+    string filename;
 
 public:
-    Facade();
-    ~Facade();
-    void OperationWrapper();
+    VideoFile(string filename) {
+        cout << "Creating VideoFile object with filename: " << filename << endl;
+        this->filename = filename;
+    }
+
+    string getCodecType() {
+        size_t pos = filename.find_last_of(".");
+        if (pos != string::npos) {
+            return filename.substr(pos + 1);
+        }
+        return "";
+    }
 };
 
-/* 实现 */
+class OggCompressionCodec {
+public:
+    OggCompressionCodec() {
+        cout << "Creating OggCompressionCodec object" << endl;
+    }
+};
 
-void SystemA::OperationA()
+class MPEG4CompressionCodec {
+public:
+    MPEG4CompressionCodec() {
+        cout << "Creating MPEG4CompressionCodec object" << endl;
+    }
+};
+
+class CodecFactory {
+public:
+    CodecFactory(string format) {
+        cout << "Creating CodecFactory object with format: " << format << endl;
+    }
+
+    OggCompressionCodec* createOggCompressionCodec() {
+        cout << "Creating OggCompressionCodec object" << endl;
+        return new OggCompressionCodec();
+    }
+
+    MPEG4CompressionCodec* createMPEG4CompressionCodec() {
+        cout << "Creating MPEG4CompressionCodec object" << endl;
+        return new MPEG4CompressionCodec();
+    }
+};
+
+class BitrateReader {
+public:
+    static VideoFile* read(VideoFile* file, CodecFactory* codec) {
+        cout << "Reading VideoFile object with codec type: " << file->getCodecType() << endl;
+        return file;
+    }
+
+    static VideoFile* convert(VideoFile* buffer, CodecFactory* codec) {
+        cout << "Converting VideoFile object with codec type: " << codec->createMPEG4CompressionCodec() << endl;
+        return buffer;
+    }
+};
+
+class AudioMixer {
+public:
+    string fix(VideoFile* file) {
+        cout << "Fixing VideoFile object" << endl;
+        return "Fixed " + file->getCodecType() + " file";
+    }
+};
+
+class VideoConverter
 {
-    cout << "SystemA::OperationA()" << endl;
-}
+public:
+    string convert(string filename, string format)
+    {
+        VideoFile* file = new VideoFile(filename);
+        CodecFactory* sourceCodec = new CodecFactory(file->getCodecType());
+        CodecFactory* destinationCodec = new CodecFactory(format);
+        VideoFile* buffer = BitrateReader::read(file, sourceCodec);
+        VideoFile* intermediateResult = BitrateReader::convert(buffer, destinationCodec);
+        string result = (new AudioMixer())->fix(intermediateResult);
 
-void SystemB::OperationB()
+        delete file;
+        delete sourceCodec;
+        delete destinationCodec;
+        
+        return result;
+    }
+};
+
+int main() 
 {
-    cout << "SystemB::OperationB()" << endl;
-}
+    VideoConverter* converter = new VideoConverter();
+    string result = converter->convert("funny-cats-video.ogg", "mp4");
+    cout << "result : " << result << endl;
 
-void SystemC::OperationC()
-{
-    cout << "SystemC::OperationC()" << endl;
-}
-
-Facade::Facade()
-{
-    sysA = new SystemA();
-    sysB = new SystemB();
-    sysC = new SystemC();
-}
-
-Facade::~Facade()
-{
-    delete sysA;
-    delete sysB;
-    delete sysC;
-}
-
-void Facade::OperationWrapper()
-{
-    sysA->OperationA();
-    sysB->OperationB();
-    sysC->OperationC();
-}
-
-// 客户端
-int main()
-{
-    Facade *facade = new Facade();
-    facade->OperationWrapper();
-
-    delete facade;
+    delete converter;
 
     return 0;
 }
