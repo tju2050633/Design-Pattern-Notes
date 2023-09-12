@@ -1,12 +1,3 @@
-<!--
- * @Author: Jialin Lu
- * @GitHub: https://github.com/tju2050633
- * @Date: 2023-05-22 11:59:45
- * @FilePath: /DesignPattern/README.md
- * @Description: 
- * 
- * Copyright (c) 2023 by 1640889387@qq.com, All Rights Reserved. 
--->
 # 项目结构
 
 ```
