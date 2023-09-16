@@ -1,109 +1,170 @@
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
-/* 声明 */
+/* ********************************* */
+// 声明
+/* ********************************* */
 
 class Command;
-class CommandA;
-class CommandB;
-class Receiver;
-class Invoker;
+class CopyCommand;
+class CutCommand;
+class PasteCommand;
+class UndoCommand;
+class Application;
+class Editor; // Reciever
 
-/* 定义 */
+class CommandHistory;
 
-class Command
-{
-public:
-    virtual ~Command() {}
-    virtual void execute() = 0;
+/* ********************************* */
+// 定义
+/* ********************************* */
+
+// 历史记录
+
+class CommandHistory {
+  private:
+    vector<Command *> history;
+
+  public:
+    void push(Command *command) { history.push_back(command); }
+    Command *pop() {
+        Command *command = history.back();
+        history.pop_back();
+        return command;
+    }
 };
 
-// 每个命令对应一个接收者
-class CommandA : public Command
-{
-private:
-    Receiver *receiver;
+// 编辑器
 
-public:
-    CommandA(Receiver *receiver);
-    void execute();
+class Editor {
+    string text;
+
+  public:
+    void setText(string text) { this->text = text; }
+    string getText() { return text; }
+
+    string getSelection() {
+        cout << "Editor : getSelection" << endl;
+        return " selected text ";
+    }
+
+    void deleteSelection() { cout << "Editor : deleteSelection" << endl; }
+
+    void replaceSelection(string text) { cout << "Editor : replaceSelection. text : " << text << endl; }
 };
 
-class CommandB : public Command
-{
-private:
-    Receiver *receiver;
+// 命令接口
+class Command {
+  protected:
+    Application application;
+    Editor editor;
+    string backup; // 备份编辑器的文本
 
-public:
-    CommandB(Receiver *receiver);
-    void execute();
+  public:
+    Command(Application application, Editor editor) {
+        this->application = application;
+        this->editor = editor;
+    }
+    virtual bool execute() = 0;
+
+    void saveBackup() {
+        cout << "Command : saveBackup" << endl;
+        backup = editor.getText();
+    }
+
+    void undo() {
+        cout << "Command : undo" << endl;
+        editor.setText(backup);
+    }
 };
 
-class Receiver
-{
-public:
-    void actionA();
-    void actionB();
+// 具体命令
+
+class CopyCommand : public Command {
+  public:
+    CopyCommand(Application application, Editor editor) : Command(application, editor) {}
+    bool execute() override {
+        cout << "CopyCommand : execute" << endl;
+        application.setClipboard(editor.getSelection());
+
+        return false; // 不记录
+    }
 };
 
-class Invoker
-{
-public:
-    void call(Command *command);
+class CutCommand : public Command {
+  public:
+    CutCommand(Application application, Editor editor) : Command(application, editor) {}
+    bool execute() override {
+        cout << "CutCommand : execute" << endl;
+        application.setClipboard(editor.getSelection());
+        editor.deleteSelection();
+
+        return true; // 记录
+    }
 };
 
-/* 实现 */
+class PasteCommand : public Command {
+  public:
+    PasteCommand(Application application, Editor editor) : Command(application, editor) {}
+    bool execute() override {
+        cout << "PasteCommand : execute" << endl;
+        editor.replaceSelection(application.getClipboard());
 
-CommandA::CommandA(Receiver *receiver)
-{
-    this->receiver = receiver;
-}
+        return true; // 记录
+    }
+};
 
-void CommandA::execute()
-{
-    this->receiver->actionA();
-}
+class UndoCommand : public Command {
+  private:
+    CommandHistory *history;
 
-CommandB::CommandB(Receiver *receiver)
-{
-    this->receiver = receiver;
-}
+  public:
+    UndoCommand(Application application, Editor editor, CommandHistory *history) : Command(application, editor) {
+        this->history = history;
+    }
+    bool execute() override {
+        cout << "UndoCommand : execute" << endl;
+        application.undo();
 
-void CommandB::execute()
-{
-    this->receiver->actionB();
-}
+        return false; // 不记录
+    }
+};
 
-void Receiver::actionA()
-{
-    cout << "Receiver::actionA()" << endl;
-}
+// 应用程序
 
-void Receiver::actionB()
-{
-    cout << "Receiver::actionB()" << endl;
-}
+class Application {
+  private:
+    string clipboard;
+    Editor *editor;
+    CommandHistory *history;
 
-void Invoker::call(Command *command)
-{
-    command->execute();
-}
+  public:
+    void setClipboard(string text) { this->clipboard = text; }
+    string getClipboard() { return clipboard; }
 
-int main()
-{
-    Receiver *receiver1 = new Receiver();
-    Receiver *receiver2 = new Receiver();
-    Command *commandA = new CommandA(receiver1);
-    Command *commandB = new CommandB(receiver2);
-    Invoker *invoker = new Invoker();
-    invoker->call(commandA);
-    invoker->call(commandB);
+    void executeCommand(Command *command) {
+        if (command->execute()) {
+            history->push(command);
+        }
+    }
 
-    delete receiver1;
-    delete receiver2;
-    delete commandA;
-    delete commandB;
+    void undo() {
+        Command *command = history->pop();
+        if (command != nullptr) {
+            command->undo();
+        }
+    }
 
-    return 0;
-}
+    void createUI() {
+        editor = new Editor();
+        history = new CommandHistory();
+
+        editor->setText("1234567890");
+
+        // 创建按钮组件，并指定点击事件为执行命令
+    }
+};
+
+int main() { return 0; }
