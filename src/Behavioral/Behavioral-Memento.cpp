@@ -8,7 +8,6 @@ using namespace std;
 
 class Editor;
 class Snapshot;
-class Command;
 
 /* ********************************* */
 // 定义
