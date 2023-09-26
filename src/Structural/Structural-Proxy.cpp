@@ -61,6 +61,7 @@ public:
         if (m_listVideosCache.empty())
         {
             m_service->listVideos();
+            m_listVideosCache = "listVideos cache";
         }
         else
         {
@@ -72,6 +73,7 @@ public:
         if (m_videoInfoCache.empty())
         {
             m_service->getVideoInfo(id);
+            m_videoInfoCache = "getVideoInfo cache";
         }
         else
         {
@@ -83,6 +85,7 @@ public:
         if (m_videoCache.empty())
         {
             m_service->downloadVideo(id);
+            m_videoCache = "downloadVideo cache";
         }
         else
         {
@@ -113,6 +116,7 @@ int main()
     CachedTVClass *proxy = new CachedTVClass(service);
     TVManager *manager = new TVManager(proxy);
     manager->renderVideoPage("1");
+    manager->renderVideoPage("2");
 
     delete service;
     delete proxy;
